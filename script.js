@@ -1,7 +1,9 @@
+// Используем cannon-es через модуль
+import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+
 // === Three.js ===
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -13,7 +15,7 @@ const directional = new THREE.DirectionalLight(0xffffff, 1);
 directional.position.set(10,20,10);
 scene.add(directional);
 
-// === Cannon.js физика ===
+// === Cannon-es физика ===
 const world = new CANNON.World();
 world.gravity.set(0,-9.82,0);
 
