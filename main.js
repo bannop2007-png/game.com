@@ -1,6 +1,8 @@
 // ------------------ MAIN ------------------
 
 // Сцена и камера
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
   75,
