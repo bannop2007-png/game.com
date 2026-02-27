@@ -1,90 +1,80 @@
-// Basic Three.js open-world car game setup
+// === Инициализация Three.js ===
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0,5,10);
 
-// Import required libraries
-import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-import * as CANNON from 'https://cdn.rawgit.com/schteppe/cannon.js/0.6.2/build/cannon.js';
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-// Setup variables
-let scene, camera, renderer, world;
+// === Освещение ===
+const light = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
+scene.add(light);
 
-// Function to initialize Three.js
-function init() {
-    // Create the scene
-    scene = new THREE.Scene();
+// === Cannon.js физика ===
+const world = new CANNON.World();
+world.gravity.set(0,-9.82,0);
 
-    // Set up camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, 10);
+// === Земля ===
+const groundBody = new CANNON.Body({ mass: 0 });
+groundBody.addShape(new CANNON.Box(new CANNON.Vec3(50,0.1,50)));
+groundBody.position.set(0,-0.1,0);
+world.addBody(groundBody);
 
-    // Create the renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+const groundGeo = new THREE.PlaneGeometry(100,100);
+const groundMat = new THREE.MeshLambertMaterial({color:0x7cfc00});
+const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+groundMesh.rotation.x = -Math.PI/2;
+scene.add(groundMesh);
 
-    // Add ambient light
-    const light = new THREE.AmbientLight(0xffffff); // soft white light
-    scene.add(light);
+// === Машина ===
+const carBody = new CANNON.Body({ mass: 1 });
+carBody.addShape(new CANNON.Box(new CANNON.Vec3(0.5,0.25,1)));
+carBody.position.set(0,1,0);
+world.addBody(carBody);
 
-    // Call the function to create the ground
-    createGround();
+const carGeo = new THREE.BoxGeometry(1,0.5,2);
+const carMat = new THREE.MeshBasicMaterial({color:0xff0000});
+const carMesh = new THREE.Mesh(carGeo, carMat);
+scene.add(carMesh);
 
-    // Initialize Cannon.js physics world
-    initPhysics();
+// === HUD скорость ===
+const speedometer = document.getElementById('speed');
 
-    // Start the game loop
-    animate();
-}
+// === Управление WASD ===
+const keys = { w:false, s:false, a:false, d:false };
+window.addEventListener('keydown', (e) => { if(keys.hasOwnProperty(e.key)) keys[e.key]=true; });
+window.addEventListener('keyup', (e) => { if(keys.hasOwnProperty(e.key)) keys[e.key]=false; });
 
-// Create the ground
-function createGround() {
-    const groundGeometry = new THREE.PlaneGeometry(100, 100);
-    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x7cfc00 });
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = - Math.PI / 2;
-    scene.add(ground);
-}
-
-// Function to initialize Cannon.js
-function initPhysics() {
-    world = new CANNON.World();
-    world.gravity.set(0, -9.82, 0); // Set gravity
-
-    // Create the ground body
-    const groundBody = new CANNON.Body({ mass: 0 });
-    const groundShape = new CANNON.Box(new CANNON.Vec3(50, 0.1, 50));
-    groundBody.addShape(groundShape);
-    groundBody.position.set(0, -0.1, 0);
-    world.addBody(groundBody);
-}
-
-// Handle car controls
-function handleControls() {
-    // Implement WASD controls
-    document.addEventListener('keydown', function(event) {
-        switch(event.key) {
-            case 'w':
-                // Move car forward
-                break;
-            case 's':
-                // Move car backward
-                break;
-            case 'a':
-                // Turn car left
-                break;
-            case 'd':
-                // Turn car right
-                break;
-        }
-    });
-}
-
-// Animate the scene
-function animate() {
+// === Анимация и физика ===
+function animate(){
     requestAnimationFrame(animate);
-    world.step(1/60);
-    renderer.render(scene, camera);
-}
 
-// Call the init function
-init();
-handleControls();
+    // Управление машиной
+    const force = 20;
+    if(keys.w) carBody.velocity.z = -force;
+    if(keys.s) carBody.velocity.z = force;
+    if(keys.a) carBody.angularVelocity.y = 1;
+    if(keys.d) carBody.angularVelocity.y = -1;
+
+    // Обновляем скорость в HUD
+    const speed = Math.round(carBody.velocity.length() * 3.6);
+    speedometer.innerText = speed;
+
+    // Шаг физики
+    world.step(1/60);
+
+    // Синхронизация Three.js и Cannon.js
+    carMesh.position.copy(carBody.position);
+    carMesh.quaternion.copy(carBody.quaternion);
+
+    renderer.render(scene,camera);
+}
+animate();
+
+// === Подстройка под размер окна ===
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
