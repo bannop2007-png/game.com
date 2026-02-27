@@ -1,6 +1,3 @@
-// Используем cannon-es через модуль
-import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
-
 // === Three.js ===
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -15,7 +12,7 @@ const directional = new THREE.DirectionalLight(0xffffff, 1);
 directional.position.set(10,20,10);
 scene.add(directional);
 
-// === Cannon-es физика ===
+// === Cannon.js физика ===
 const world = new CANNON.World();
 world.gravity.set(0,-9.82,0);
 
@@ -54,27 +51,22 @@ window.addEventListener('keyup', (e) => { if(keys.hasOwnProperty(e.key)) keys[e.
 function animate(){
     requestAnimationFrame(animate);
 
-    // Управление машиной через силы
     const force = 150;
     if(keys.w) carBody.applyLocalForce(new CANNON.Vec3(0,0,-force), new CANNON.Vec3(0,0,0));
     if(keys.s) carBody.applyLocalForce(new CANNON.Vec3(0,0,force), new CANNON.Vec3(0,0,0));
     if(keys.a) carBody.angularVelocity.y = 1;
     if(keys.d) carBody.angularVelocity.y = -1;
 
-    // Шаг физики
     world.step(1/60);
 
-    // Синхронизация Three.js и Cannon.js
     carMesh.position.copy(carBody.position);
     carMesh.quaternion.copy(carBody.quaternion);
 
-    // Камера следует за машиной
     camera.position.x = carMesh.position.x + 5;
     camera.position.y = carMesh.position.y + 5;
     camera.position.z = carMesh.position.z + 10;
     camera.lookAt(carMesh.position);
 
-    // Обновляем скорость в HUD
     const speed = Math.round(carBody.velocity.length() * 3.6);
     speedometer.innerText = speed;
 
@@ -82,7 +74,6 @@ function animate(){
 }
 animate();
 
-// === Подстройка под размер окна ===
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
