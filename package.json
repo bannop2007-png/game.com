@@ -1,1 +1,14 @@
-{\n  "name": "open-world-car-game",\n  "version": "1.0.0",\n  "description": "An open-world car game.",\n  "scripts": {\n    "start": "webpack serve --mode development",\n    "build": "webpack --mode production"\n  },\n  "devDependencies": {\n    "webpack": "^5.0.0",\n    "webpack-cli": "^4.0.0",\n    "webpack-dev-server": "^3.0.0",\n    "three": "^0.125.0",\n    "cannon": "^0.6.2"\n  },\n  "dependencies": {\n    "express": "^4.17.1"\n  }\n}
+{
+  "name": "open-world-car-game",
+  "version": "1.0.0",
+  "description": "Open World Car Game",
+  "scripts": {
+    "start": "live-server",
+    "build": "echo 'No build needed'"
+  },
+  "dependencies": {
+    "three": "^0.125.0",
+    "cannon": "^0.6.2",
+    "live-server": "^1.2.1"
+  }
+}
