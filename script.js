@@ -1,149 +1,90 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+// Basic Three.js open-world car game setup
 
-let gameRunning = false;
-let score = 0;
-let speed = 5;
-let roadOffset = 0;
+// Import required libraries
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+import * as CANNON from 'https://cdn.rawgit.com/schteppe/cannon.js/0.6.2/build/cannon.js';
 
-const laneCount = 3;
-const laneWidth = canvas.width / laneCount;
+// Setup variables
+let scene, camera, renderer, world;
 
-const player = {
-    width: 40,
-    height: 80,
-    lane: 1
-};
+// Function to initialize Three.js
+function init() {
+    // Create the scene
+    scene = new THREE.Scene();
 
-let enemies = [];
+    // Set up camera
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, 10);
 
-function drawRoad() {
-    ctx.fillStyle = "#1b1b1b";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Create the renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-    // Боковые линии
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(5, 0, 5, canvas.height);
-    ctx.fillRect(canvas.width - 10, 0, 5, canvas.height);
+    // Add ambient light
+    const light = new THREE.AmbientLight(0xffffff); // soft white light
+    scene.add(light);
 
-    // Разметка
-    ctx.fillStyle = "white";
-    for (let i = -40; i < canvas.height; i += 60) {
-        ctx.fillRect(canvas.width / 3 - 2, i + roadOffset, 4, 30);
-        ctx.fillRect((canvas.width / 3) * 2 - 2, i + roadOffset, 4, 30);
-    }
+    // Call the function to create the ground
+    createGround();
 
-    roadOffset += speed;
-    if (roadOffset > 60) roadOffset = 0;
+    // Initialize Cannon.js physics world
+    initPhysics();
+
+    // Start the game loop
+    animate();
 }
 
-function drawCar(x, y, color) {
-    // Тень
-    ctx.fillStyle = "rgba(0,0,0,0.4)";
-    ctx.fillRect(x + 5, y + 5, player.width, player.height);
-
-    // Корпус
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, player.width, player.height);
-
-    // Стекло
-    ctx.fillStyle = "#111";
-    ctx.fillRect(x + 8, y + 10, player.width - 16, 20);
-
-    // Фары
-    ctx.fillStyle = "yellow";
-    ctx.fillRect(x + 5, y, 8, 8);
-    ctx.fillRect(x + player.width - 13, y, 8, 8);
+// Create the ground
+function createGround() {
+    const groundGeometry = new THREE.PlaneGeometry(100, 100);
+    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x7cfc00 });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = - Math.PI / 2;
+    scene.add(ground);
 }
 
-function createEnemy() {
-    enemies.push({
-        lane: Math.floor(Math.random() * laneCount),
-        y: -100
-    });
+// Function to initialize Cannon.js
+function initPhysics() {
+    world = new CANNON.World();
+    world.gravity.set(0, -9.82, 0); // Set gravity
+
+    // Create the ground body
+    const groundBody = new CANNON.Body({ mass: 0 });
+    const groundShape = new CANNON.Box(new CANNON.Vec3(50, 0.1, 50));
+    groundBody.addShape(groundShape);
+    groundBody.position.set(0, -0.1, 0);
+    world.addBody(groundBody);
 }
 
-function update() {
-    if (!gameRunning) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawRoad();
-
-    const playerX = player.lane * laneWidth + laneWidth / 2 - player.width / 2;
-    const playerY = canvas.height - 120;
-
-    drawCar(playerX, playerY, "#00ff88");
-
-    enemies.forEach(enemy => {
-        enemy.y += speed;
-        const enemyX = enemy.lane * laneWidth + laneWidth / 2 - player.width / 2;
-        drawCar(enemyX, enemy.y, "#ff2d2d");
-
-        if (
-            enemy.lane === player.lane &&
-            enemy.y + player.height > playerY &&
-            enemy.y < playerY + player.height
-        ) {
-            gameOver();
+// Handle car controls
+function handleControls() {
+    // Implement WASD controls
+    document.addEventListener('keydown', function(event) {
+        switch(event.key) {
+            case 'w':
+                // Move car forward
+                break;
+            case 's':
+                // Move car backward
+                break;
+            case 'a':
+                // Turn car left
+                break;
+            case 'd':
+                // Turn car right
+                break;
         }
     });
-
-    enemies = enemies.filter(e => e.y < canvas.height + 100);
-
-    score++;
-    speed += 0.001;
-
-    document.getElementById("score").textContent = "Счёт: " + score;
-
-    requestAnimationFrame(update);
 }
 
-function gameOver() {
-    gameRunning = false;
-
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "white";
-    ctx.font = "30px Arial";
-    ctx.fillText("💥 GAME OVER", 100, 250);
-    ctx.font = "20px Arial";
-    ctx.fillText("Счёт: " + score, 150, 290);
+// Animate the scene
+function animate() {
+    requestAnimationFrame(animate);
+    world.step(1/60);
+    renderer.render(scene, camera);
 }
 
-document.addEventListener("keydown", e => {
-    if (!gameRunning) return;
-
-    if (e.key === "ArrowLeft" && player.lane > 0) {
-        player.lane--;
-    }
-
-    if (e.key === "ArrowRight" && player.lane < laneCount - 1) {
-        player.lane++;
-    }
-});
-
-document.getElementById("startBtn").onclick = () => {
-    document.getElementById("menu").style.display = "none";
-    canvas.style.display = "block";
-    document.getElementById("ui").style.display = "block";
-
-    score = 0;
-    speed = 5;
-    enemies = [];
-    gameRunning = true;
-
-    update();
-};
-
-document.getElementById("restartBtn").onclick = () => {
-    score = 0;
-    speed = 5;
-    enemies = [];
-    gameRunning = true;
-    update();
-};
-
-setInterval(() => {
-    if (gameRunning) createEnemy();
-}, 1000);
+// Call the init function
+init();
+handleControls();
