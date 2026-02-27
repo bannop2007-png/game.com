@@ -43,7 +43,7 @@
 
         // Physics body for the car
         const carBody = new CANNON.Body({ mass: 1 });
-        carBody.addShape(new CANNON.Box(new CANNON.Vec3(0.5, 0.25, 1));
+        carBody.addShape(new CANNON.Box(new CANNON.Vec3(0.5, 0.25, 1)));
         carBody.position.set(0, 1, 0);
         world.addBody(carBody);
 
