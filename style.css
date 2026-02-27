@@ -1,16 +1,21 @@
+/* Сбрасываем отступы и скролл */
 body {
     margin: 0;
     overflow: hidden;
     font-family: Arial, sans-serif;
 }
 
+/* Canvas занимает весь экран */
 canvas {
     display: block;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
+    width: 100vw;
+    height: 100vh;
 }
 
+/* HUD */
 #hud {
     position: absolute;
     top: 10px;
@@ -20,4 +25,18 @@ canvas {
     padding: 10px;
     border-radius: 5px;
     font-size: 18px;
+}
+
+/* Скорость яркая */
+.speed-display {
+    color: yellow;
+    font-weight: bold;
+}
+
+/* Адаптация под маленькие экраны */
+@media (max-width: 600px) {
+    #hud {
+        font-size: 14px;
+        padding: 5px;
+    }
 }
