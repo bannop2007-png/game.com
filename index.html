@@ -3,32 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js and Cannon.js Setup</title>
-    <!-- Include Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Include Cannon.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon-es/0.18.0/cannon-es.min.js"></script>
+    <title>Open World Car Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #hud { position: absolute; top: 10px; left: 10px; color: white; }
+    </style>
 </head>
 <body>
+    <div id="hud">
+        <p>Speed: <span id="speed">0</span> km/h</p>
+    </div>
+    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="https://cdn.rawgit.com/schteppe/cannon.js/0.6.2/build/cannon.min.js"></script>
     <script>
-        // Your setup code here
+        // Scene setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+        // Physics setup
+        const world = new CANNON.World();
+        world.gravity.set(0, -9.82, 0); // m/s²
 
+        // Terrain
+        const terrainGeometry = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+        const terrainMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+        const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+        terrain.rotation.x = - Math.PI / 2;
+        scene.add(terrain);
+
+        // Car model
+        const carGeometry = new THREE.BoxGeometry(1, 0.5, 2);
+        const carMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const car = new THREE.Mesh(carGeometry, carMaterial);
+        scene.add(car);
+
+        // Physics body for the car
+        const carBody = new CANNON.Body({ mass: 1 });
+        carBody.addShape(new CANNON.Box(new CANNON.Vec3(0.5, 0.25, 1));
+        carBody.position.set(0, 1, 0);
+        world.addBody(carBody);
+
+        // Camera position
         camera.position.z = 5;
 
+        // Controls
+        const speedometer = document.getElementById('speed');
+        let speed = 0;
+        window.addEventListener('keydown', function(event) {
+            if (event.key === 'w') {
+                carBody.velocity.z = -10; // move forward
+            } else if (event.key === 's') {
+                carBody.velocity.z = 10; // move backward
+            }
+            // Update speed
+            speed = Math.abs(carBody.velocity.z) * 3.6; // Convert to km/h
+            speedometer.innerText = Math.round(speed);
+        });
+
+        // Lighting
+        const light = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
+        scene.add(light);
+
+        // Animation loop
         function animate() {
             requestAnimationFrame(animate);
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
+            world.step(1 / 60);
+            car.position.copy(carBody.position);
+            car.quaternion.copy(carBody.quaternion);
             renderer.render(scene, camera);
         }
 
