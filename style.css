@@ -6,6 +6,9 @@ body {
 
 canvas {
     display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 #hud {
@@ -17,9 +20,4 @@ canvas {
     padding: 10px;
     border-radius: 5px;
     font-size: 18px;
-}
-
-.speed-display {
-    color: yellow;
-    font-weight: bold;
 }
