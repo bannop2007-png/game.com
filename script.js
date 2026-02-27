@@ -1,4 +1,4 @@
-// === Инициализация Three.js ===
+// === Three.js ===
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 
@@ -6,14 +6,14 @@ const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// === Освещение ===
-const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+// === Свет ===
+const ambient = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambient);
-const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+const directional = new THREE.DirectionalLight(0xffffff, 1);
 directional.position.set(10,20,10);
 scene.add(directional);
 
-// === Cannon-es физика ===
+// === Cannon.js физика ===
 const world = new CANNON.World();
 world.gravity.set(0,-9.82,0);
 
@@ -24,7 +24,7 @@ groundBody.position.set(0,-0.1,0);
 world.addBody(groundBody);
 
 const groundGeo = new THREE.PlaneGeometry(100,100);
-const groundMat = new THREE.MeshLambertMaterial({color:0x7cfc00});
+const groundMat = new THREE.MeshPhongMaterial({color:0x00aa00});
 const groundMesh = new THREE.Mesh(groundGeo, groundMat);
 groundMesh.rotation.x = -Math.PI/2;
 scene.add(groundMesh);
@@ -36,11 +36,11 @@ carBody.position.set(0,1,0);
 world.addBody(carBody);
 
 const carGeo = new THREE.BoxGeometry(1,0.5,2);
-const carMat = new THREE.MeshLambertMaterial({color:0xff0000});
+const carMat = new THREE.MeshPhongMaterial({color:0xff0000});
 const carMesh = new THREE.Mesh(carGeo, carMat);
 scene.add(carMesh);
 
-// === HUD скорость ===
+// === HUD ===
 const speedometer = document.getElementById('speed');
 
 // === Управление WASD ===
