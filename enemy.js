@@ -5,16 +5,16 @@ class Enemy {
       new THREE.MeshPhongMaterial({color:0x880000})
     );
     this.mesh.position.set(x,0.5,z);
-    this.speed = 0.02;
+    this.speed = 0.03;
   }
 
   follow(player) {
-    let dx = player.camera.position.x - this.mesh.position.x;
-    let dz = player.camera.position.z - this.mesh.position.z;
-    let dist = Math.sqrt(dx*dx + dz*dz);
+    const dx = player.camera.position.x - this.mesh.position.x;
+    const dz = player.camera.position.z - this.mesh.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
     if(dist>0.5){
-      this.mesh.position.x += dx/dist * this.speed;
-      this.mesh.position.z += dz/dist * this.speed;
+      this.mesh.position.x += (dx/dist) * this.speed;
+      this.mesh.position.z += (dz/dist) * this.speed;
     }
   }
 }
