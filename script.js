@@ -1,17 +1,19 @@
 // === Инициализация Three.js ===
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-camera.position.set(0,5,10);
 
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // === Освещение ===
-const light = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
-scene.add(light);
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambient);
+const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+directional.position.set(10,20,10);
+scene.add(directional);
 
-// === Cannon.js физика ===
+// === Cannon-es физика ===
 const world = new CANNON.World();
 world.gravity.set(0,-9.82,0);
 
@@ -34,7 +36,7 @@ carBody.position.set(0,1,0);
 world.addBody(carBody);
 
 const carGeo = new THREE.BoxGeometry(1,0.5,2);
-const carMat = new THREE.MeshBasicMaterial({color:0xff0000});
+const carMat = new THREE.MeshLambertMaterial({color:0xff0000});
 const carMesh = new THREE.Mesh(carGeo, carMat);
 scene.add(carMesh);
 
@@ -50,16 +52,12 @@ window.addEventListener('keyup', (e) => { if(keys.hasOwnProperty(e.key)) keys[e.
 function animate(){
     requestAnimationFrame(animate);
 
-    // Управление машиной
-    const force = 20;
-    if(keys.w) carBody.velocity.z = -force;
-    if(keys.s) carBody.velocity.z = force;
+    // Управление машиной через силы
+    const force = 150;
+    if(keys.w) carBody.applyLocalForce(new CANNON.Vec3(0,0,-force), new CANNON.Vec3(0,0,0));
+    if(keys.s) carBody.applyLocalForce(new CANNON.Vec3(0,0,force), new CANNON.Vec3(0,0,0));
     if(keys.a) carBody.angularVelocity.y = 1;
     if(keys.d) carBody.angularVelocity.y = -1;
-
-    // Обновляем скорость в HUD
-    const speed = Math.round(carBody.velocity.length() * 3.6);
-    speedometer.innerText = speed;
 
     // Шаг физики
     world.step(1/60);
@@ -67,6 +65,16 @@ function animate(){
     // Синхронизация Three.js и Cannon.js
     carMesh.position.copy(carBody.position);
     carMesh.quaternion.copy(carBody.quaternion);
+
+    // Камера следует за машиной
+    camera.position.x = carMesh.position.x + 5;
+    camera.position.y = carMesh.position.y + 5;
+    camera.position.z = carMesh.position.z + 10;
+    camera.lookAt(carMesh.position);
+
+    // Обновляем скорость в HUD
+    const speed = Math.round(carBody.velocity.length() * 3.6);
+    speedometer.innerText = speed;
 
     renderer.render(scene,camera);
 }
