@@ -1,9 +1,11 @@
+/* Сбрасываем отступы */
 body {
     margin: 0;
     overflow: hidden;
     font-family: Arial, sans-serif;
 }
 
+/* Canvas занимает весь экран */
 canvas {
     display: block;
     position: fixed;
@@ -13,6 +15,7 @@ canvas {
     height: 100vh;
 }
 
+/* HUD */
 #hud {
     position: absolute;
     top: 10px;
