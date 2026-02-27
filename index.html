@@ -3,106 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>Shadow of the Abyss</title>
-<style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: black; }
-  canvas { display: block; }
-  #overlay {
-    position: absolute;
-    top:0; left:0;
-    width:100%; height:100%;
-    pointer-events:none;
-    background: radial-gradient(circle at center, rgba(0,0,0,0) 150px, rgba(0,0,0,0.95) 300px);
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="overlay"></div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
-<script>
-let scene = new THREE.Scene();
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-let renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-// Floor
-let floorGeometry = new THREE.PlaneGeometry(100, 100);
-let floorMaterial = new THREE.MeshPhongMaterial({color:0x111111});
-let floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI/2;
-scene.add(floor);
-
-// Light
-let pointLight = new THREE.PointLight(0xffffff, 1, 15);
-pointLight.position.set(0, 2, 0);
-scene.add(pointLight);
-
-// Player
-camera.position.set(0, 1.5, 5);
-
-// Controls
-let keys = {};
-document.addEventListener('keydown', e => keys[e.key.toLowerCase()]=true);
-document.addEventListener('keyup', e => keys[e.key.toLowerCase()]=false);
-
-// Sounds
-let ambient = new Howl({
-  src: ['https://freesound.org/data/previews/341/341695_6244395-lq.mp3'],
-  loop: true, volume:0.3
-});
-ambient.play();
-
-let jumpScare = new Howl({
-  src:['https://freesound.org/data/previews/331/331912_3248244-lq.mp3'], volume:1.0
-});
-
-// Creepy boxes
-let boxes = [];
-for(let i=0;i<15;i++){
-  let box = new THREE.Mesh(
-    new THREE.BoxGeometry(1,1,1),
-    new THREE.MeshPhongMaterial({color:0x222222})
-  );
-  box.position.set((Math.random()-0.5)*30,0.5,(Math.random()-0.5)*30);
-  scene.add(box);
-  boxes.push(box);
-}
-
-// Random jump scare
-function randomScare(){
-  if(Math.random()<0.002){
-    jumpScare.play();
-    let flash = document.getElementById('overlay');
-    flash.style.background = 'rgba(255,0,0,0.5)';
-    setTimeout(()=>{flash.style.background='radial-gradient(circle at center, rgba(0,0,0,0) 150px, rgba(0,0,0,0.95) 300px)';},200);
-  }
-}
-
-// Animate
-function animate(){
-  requestAnimationFrame(animate);
-
-  let speed = 0.1;
-  if(keys['w']) camera.position.z -= speed;
-  if(keys['s']) camera.position.z += speed;
-  if(keys['a']) camera.position.x -= speed;
-  if(keys['d']) camera.position.x += speed;
-
-  // Update light to follow camera (flashlight)
-  pointLight.position.set(camera.position.x, camera.position.y, camera.position.z);
-
-  randomScare();
-  renderer.render(scene,camera);
-}
-animate();
-
-// Resize
-window.addEventListener('resize', ()=>{
-  camera.aspect = window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-</script>
+<script src="player.js"></script>
+<script src="enemy.js"></script>
+<script src="room.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
