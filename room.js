@@ -10,14 +10,12 @@ class Room {
     scene.add(floor);
 
     // Стены
-    const wallMat = new THREE.MeshPhongMaterial({ color: 0x222222 }); // тёмные стены
+   const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(50, 50),
+  new THREE.MeshPhongMaterial({ color: 0x444444 }) // не черный, а темно-серый
+);
 
-    const walls = [
-      new THREE.Mesh(new THREE.BoxGeometry(50, 5, 1), wallMat), // передняя стена
-      new THREE.Mesh(new THREE.BoxGeometry(50, 5, 1), wallMat), // задняя стена
-      new THREE.Mesh(new THREE.BoxGeometry(1, 5, 50), wallMat), // левая стена
-      new THREE.Mesh(new THREE.BoxGeometry(1, 5, 50), wallMat)  // правая стена
-    ];
+const wallMat = new THREE.MeshPhongMaterial({ color: 0x666666 });
 
     // Позиционируем стены
     walls[0].position.set(0, 2.5, -25);
