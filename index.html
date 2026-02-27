@@ -3,7 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <title>Shadow of the Abyss</title>
-<link rel="stylesheet" href="style.css">
+<style>
+html, body { margin:0; height:100%; overflow:hidden; background:black; }
+canvas { display:block; }
+#overlay {
+  position:absolute; top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  background: radial-gradient(circle at center, rgba(0,0,0,0) 150px, rgba(0,0,0,0.95) 300px);
+  transition: background 0.2s ease;
+}
+</style>
 </head>
 <body>
 <div id="overlay"></div>
@@ -11,10 +21,121 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
 
-<script src="player.js"></script>
-<script src="enemy.js"></script>
-<script src="room.js"></script>
-<script src="utils.js"></script>
-<script src="main.js"></script>
+<script>
+// ------------------ PLAYER ------------------
+class Player {
+  constructor(camera){
+    this.camera = camera;
+    this.speed = 0.12;
+    this.keys = {};
+    document.addEventListener('keydown', e => this.keys[e.key.toLowerCase()] = true);
+    document.addEventListener('keyup', e => this.keys[e.key.toLowerCase()] = false);
+  }
+  update(){
+    if(this.keys['w']) this.camera.position.z -= this.speed;
+    if(this.keys['s']) this.camera.position.z += this.speed;
+    if(this.keys['a']) this.camera.position.x -= this.speed;
+    if(this.keys['d']) this.camera.position.x += this.speed;
+  }
+}
+
+// ------------------ ENEMY ------------------
+class Enemy {
+  constructor(x,z){
+    this.mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1,1,1),
+      new THREE.MeshPhongMaterial({color:0x880000})
+    );
+    this.mesh.position.set(x,0.5,z);
+    this.speed = 0.03;
+  }
+  follow(player){
+    const dx = player.camera.position.x - this.mesh.position.x;
+    const dz = player.camera.position.z - this.mesh.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    if(dist>0.5){
+      this.mesh.position.x += (dx/dist)*this.speed;
+      this.mesh.position.z += (dz/dist)*this.speed;
+    }
+  }
+}
+
+// ------------------ ROOM ------------------
+class Room {
+  constructor(scene){
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(50,50),
+      new THREE.MeshPhongMaterial({color:0x111111})
+    );
+    floor.rotation.x = -Math.PI/2;
+    scene.add(floor);
+
+    const wallMat = new THREE.MeshPhongMaterial({color:0x222222});
+    const walls = [
+      new THREE.Mesh(new THREE.BoxGeometry(50,5,1), wallMat),
+      new THREE.Mesh(new THREE.BoxGeometry(50,5,1), wallMat),
+      new THREE.Mesh(new THREE.BoxGeometry(1,5,50), wallMat),
+      new THREE.Mesh(new THREE.BoxGeometry(1,5,50), wallMat)
+    ];
+    walls[0].position.set(0,2.5,-25);
+    walls[1].position.set(0,2.5,25);
+    walls[2].position.set(-25,2.5,0);
+    walls[3].position.set(25,2.5,0);
+    walls.forEach(w=>scene.add(w));
+  }
+}
+
+// ------------------ UTILS ------------------
+function randomScare(jumpscare, overlay){
+  if(Math.random()<0.001){
+    jumpscare.play();
+    overlay.style.background='rgba(255,0,0,0.5)';
+    setTimeout(()=>overlay.style.background='radial-gradient(circle at center, rgba(0,0,0,0) 150px, rgba(0,0,0,0.95) 300px)',200);
+  }
+}
+
+// ------------------ MAIN ------------------
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0,1.5,10);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const light = new THREE.PointLight(0xffffff,1,15);
+light.position.set(camera.position.x, camera.position.y, camera.position.z);
+scene.add(light);
+
+const room = new Room(scene);
+const player = new Player(camera);
+
+const enemies = [];
+for(let i=0;i<5;i++){
+  const e = new Enemy((Math.random()-0.5)*20,(Math.random()-0.5)*20);
+  scene.add(e.mesh);
+  enemies.push(e);
+}
+
+const overlay = document.getElementById('overlay');
+const ambient = new Howl({src:['https://freesound.org/data/previews/341/341695_6244395-lq.mp3'], loop:true, volume:0.3});
+ambient.play();
+const jumpscare = new Howl({src:['https://freesound.org/data/previews/331/331912_3248244-lq.mp3'], volume:1.0});
+
+function animate(){
+  requestAnimationFrame(animate);
+  player.update();
+  enemies.forEach(e=>e.follow(player));
+  light.position.set(camera.position.x,camera.position.y,camera.position.z);
+  randomScare(jumpscare, overlay);
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
 </body>
 </html>
