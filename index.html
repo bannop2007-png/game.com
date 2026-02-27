@@ -3,59 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js Car Game</title>
+    <title>Three.js and Cannon.js Setup</title>
+    <!-- Include Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon-es/0.22.0/cannon-es.min.js"></script>
+    <!-- Include Cannon.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon-es/0.18.0/cannon-es.min.js"></script>
 </head>
 <body>
-    <canvas id="gameCanvas" style="width: 100%; height: 100%;"></canvas>
     <script>
-        // Setup Three.js scene
+        // Your setup code here
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gameCanvas') });
+        const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-        // Setup Cannon.js physics
-        const world = new CANNON.World();
-        world.gravity.set(0, -9.82, 0); // Set gravity
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
 
-        // Function to create a car
-        function createCar() {
-            const geometry = new THREE.BoxGeometry(2, 1, 5);
-            const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const car = new THREE.Mesh(geometry, material);
-            scene.add(car);
+        camera.position.z = 5;
 
-            // Create Cannon.js body for the car
-            const carBody = new CANNON.Body({ mass: 150 });
-            carBody.addShape(new CANNON.Box(new CANNON.Vec3(1, 0.5, 2.5)));
-            carBody.position.set(0, 5, 0);
-            world.addBody(carBody);
-
-            return { mesh: car, body: carBody };
-        }
-
-        const car = createCar();
-
-        // Animation loop
         function animate() {
             requestAnimationFrame(animate);
-            world.step(1/60);
-            car.mesh.position.copy(car.body.position);
-            car.mesh.quaternion.copy(car.body.quaternion);
-
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
             renderer.render(scene, camera);
         }
 
         animate();
-
-        // Window resize handler
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
     </script>
 </body>
 </html>
