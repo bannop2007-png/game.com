@@ -16,7 +16,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // Свет (фонарик)
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // мягкий свет
+const light = new THREE.PointLight(0xffffff, 2, 30); // ярче и дальше // мягкий свет
 scene.add(ambientLight);
 light.position.set(camera.position.x, camera.position.y, camera.position.z);
 scene.add(light);
