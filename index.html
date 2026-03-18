@@ -1,23 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Shadow of the Abyss</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Финансовая Пирамида (Симулятор)</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="overlay"></div>
 
-<!-- Библиотеки -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <div class="container">
+        <h1>💰 Финансовая Пирамида</h1>
 
-<!-- Скрипты игры -->
-<script src="utils.js"></script>
-<script src="player.js"></script>
-<script src="enemy.js"></script>
-<script src="room.js"></script>
-<script src="main.js"></script>
+        <div class="stats">
+            <p>Баланс: <span id="balance">1000</span>$</p>
+            <p>Участников: <span id="users">1</span></p>
+            <p>Уровень: <span id="level">1</span></p>
+        </div>
 
+        <div class="buttons">
+            <button onclick="invest()">Инвестировать</button>
+            <button onclick="addUsers()">Привлечь участников</button>
+            <button onclick="withdraw()">Вывести деньги</button>
+        </div>
+
+        <div class="log">
+            <h3>События:</h3>
+            <ul id="logList"></ul>
+        </div>
+
+        <div class="status" id="status">
+            Система стабильна
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
