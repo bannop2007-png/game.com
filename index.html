@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHOES OF DARKNESS - Horror Survival</title>
+    <style>
+        /* --- CSS STYLES --- */
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Roboto:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #8a0000;
+            --text-color: #e0e0e0;
+            --bg-overlay: rgba(0, 0, 0, 0.85);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
+            user-select: none;
+        }
+
+        #game-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none; /* Пропускать клики к игре, кроме кнопок */
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        /* Main Menu */
+        #main-menu, #pause-menu, #game-over-screen, #victory-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-overlay);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-family: 'Creepster', cursive;
+            font-size: 5rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px red;
+            margin-bottom: 10px;
+            letter-spacing: 5px;
+            animation: pulse 3s infinite;
+        }
+
+        h2 {
+            font-family: 'Creepster', cursive;
+            font-size: 3rem;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: #fff;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            margin: 10px;
+            cursor: pointer;
+            font-family: 'Creepster', cursive;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            min-width: 250px;
+        }
+
+        .menu-btn:hover {
+            background: var(--primary-color);
+            box-shadow: 0 0 20px var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.6);
+            border-left: 4px solid var(--primary-color);
+            padding: 10px 20px;
+            min-width: 200px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        #health-bar-container, #stamina-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            margin-top: 5px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #health-fill {
+            height: 100%;
+            width: 100%;
+            background: #d32f2f;
+            transition: width 0.2s;
+        }
+
+        #stamina-fill {
+            height: 100%;
+            width: 100%;
+            background: #ffca28;
+            transition: width 0.1s;
+        }
+
+        #inventory-display {
+            text-align: right;
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        #message-area {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 1.2rem;
+            text-shadow: 0 2px 4px black;
+            opacity: 0;
+            transition: opacity 0.5s;
+            text-align: center;
+            z-index: 15;
+        }
+
+        /* Shop Modal */
+        #shop-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid #555;
+            padding: 30px;
+            width: 600px;
+            max-width: 90%;
+            z-index: 30;
+            display: none;
+            pointer-events: auto;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .shop-item button {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 5px 15px;
+            cursor: pointer;
+        }
+        .shop-item button:hover { background: #555; }
+        .shop-item button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { text-shadow: 0 0 20px red; }
+            50% { text-shadow: 0 0 40px red, 0 0 10px darkred; }
+            100% { text-shadow: 0 0 20px red; }
+        }
+
+        .damage-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+    </style>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- PointerLockControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+</head>
+<body>
+
+    <!-- 3D Canvas Container -->
+    <div id="game-container"></div>
+
+    <!-- Damage Effect -->
+    <div id="damage-overlay" class="damage-overlay"></div>
+
+    <!-- Crosshair -->
+    <div id="crosshair"></div>
+
+    <!-- Message Area -->
+    <div id="message-area"></div>
+
+    <!-- UI Layer -->
+    <div id="ui-layer">
+        
+        <!-- Main Menu -->
+        <div id="main-menu" class="interactive">
+            <h1>ECHOES OF DARKNESS</h1>
+            <p style="color: #aaa; margin-bottom: 30px;">Survival Horror Experience</p>
+            <button class="menu-btn" onclick="startGame()">New Game</button>
+            <button class="menu-btn" onclick="loadGame()" id="continue-btn" disabled>Continue</button>
+            <div style="margin-top: 20px; font-size: 0.8rem; color: #666;">
+                WASD: Move | SHIFT: Run | F: Flashlight | E: Interact
+            </div>
+        </div>
+
+        <!-- Pause Menu -->
+        <div id="pause-menu" class="interactive hidden">
+            <h2>PAUSED</h2>
+            <button class="menu-btn" onclick="resumeGame()">Resume</button>
+            <button class="menu-btn" onclick="openShop()">Shop (Coins: <span id="shop-coins">0</span>)</button>
+            <button class="menu-btn" onclick="saveAndQuit()">Save & Quit</button>
+        </div>
+
+        <!-- Shop Modal -->
+        <div id="shop-modal" class="interactive">
+            <h2 style="text-align: center; color: gold;">BLACK MARKET</h2>
+            <div id="shop-items">
+                <!-- Items injected via JS -->
+            </div>
+            <button class="menu-btn" style="width: 100%; margin-top: 20px;" onclick="closeShop()">Close</button>
+        </div>
+
+        <!-- Game Over -->
+        <div id="game-over-screen" class="interactive hidden">
+            <h1 style="color: darkred;">YOU DIED</h1>
+            <p id="death-reason" style="font-size: 1.2rem; margin-bottom: 20px;">The darkness consumed you.</p>
+            <button class="menu-btn" onclick="resetGame()">Try Again</button>
+            <button class="menu-btn" onclick="showMainMenu()">Main Menu</button>
+        </div>
+
+        <!-- Victory -->
+        <div id="victory-screen" class="interactive hidden">
+            <h1 style="color: gold;">ESCAPED!</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 20px;">You found all keys and survived.</p>
+            <p id="final-stats" style="color: #aaa; margin-bottom: 20px;"></p>
+            <button class="menu-btn" onclick="resetGame()">Play Again</button>
+            <button class="menu-btn" onclick="showMainMenu()">Main Menu</button>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div class="stat-box">
+                <div class="stat-label">Health</div>
+                <div id="health-bar-container"><div id="health-fill"></div></div>
+                <div class="stat-label" style="margin-top: 10px;">Stamina</div>
+                <div id="stamina-bar-container"><div id="stamina-fill"></div></div>
+            </div>
+            
+            <div id="inventory-display" class="stat-box">
+                <div class="stat-label">Keys Collected</div>
+                <div class="stat-value" style="color: gold;"><span id="keys-count">0</span>/5</div>
+                <div class="stat-label" style="margin-top: 10px;">Coins</div>
+                <div class="stat-value" style="color: gold;" id="coins-count">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
