@@ -4,118 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ECHOES OF THE ABYSS</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Шрифты -->
-    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <!-- Three.js -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Roboto:wght@400;700&display=swap');
+        :root { --blood: #8a0000; --dark: #050505; }
+        body { margin: 0; overflow: hidden; background: var(--dark); font-family: 'Roboto', sans-serif; color: #eee; user-select: none; }
+        #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        .interactive { pointer-events: auto; }
+        
+        /* Screens */
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); transition: opacity 0.3s; }
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+        
+        h1 { font-family: 'Creepster', cursive; font-size: 5rem; color: var(--blood); text-shadow: 0 0 20px red; margin: 0 0 20px 0; animation: pulse 3s infinite; }
+        .btn { background: transparent; border: 2px solid var(--blood); color: #fff; padding: 15px 40px; font-size: 1.5rem; margin: 10px; cursor: pointer; font-family: 'Creepster', cursive; transition: all 0.3s; min-width: 250px; text-transform: uppercase; }
+        .btn:hover { background: var(--blood); box-shadow: 0 0 20px var(--blood); transform: scale(1.05); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* HUD */
+        #hud { position: absolute; bottom: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none; }
+        .stat-box { background: rgba(0,0,0,0.6); border-left: 4px solid var(--blood); padding: 10px 20px; min-width: 200px; }
+        .bar-container { width: 100%; height: 8px; background: #333; margin-top: 5px; border-radius: 4px; overflow: hidden; }
+        #health-fill { height: 100%; width: 100%; background: #d32f2f; transition: width 0.2s; }
+        #stamina-fill { height: 100%; width: 100%; background: #ffca28; transition: width 0.1s; }
+        
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: rgba(255, 255, 255, 0.6); border-radius: 50%; transform: translate(-50%, -50%); z-index: 20; pointer-events: none; }
+        #message-area { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); color: #fff; font-size: 1.2rem; text-shadow: 0 2px 4px black; opacity: 0; transition: opacity 0.5s; text-align: center; z-index: 15; }
+        
+        /* Effects */
+        #vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-shadow: inset 0 0 100px 50px black; pointer-events: none; z-index: 5; transition: box-shadow 0.2s; }
+        #damage-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.6); pointer-events: none; z-index: 6; opacity: 0; transition: opacity 0.2s; }
+
+        @keyframes pulse { 0% { text-shadow: 0 0 20px red; } 50% { text-shadow: 0 0 40px red, 0 0 10px darkred; } 100% { text-shadow: 0 0 20px red; } }
+        
+        /* Settings Modal */
+        #settings-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(10,10,10,0.95); border: 2px solid #333; padding: 30px; width: 400px; display: none; pointer-events: auto; z-index: 50; }
+        .setting-row { display: flex; justify-content: space-between; margin: 10px 0; align-items: center; }
+        input[type=range] { width: 150px; }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 </head>
 <body>
-
-    <!-- Игровой контейнер -->
     <div id="game-container"></div>
+    <div id="vignette"></div>
+    <div id="damage-overlay"></div>
+    <div id="crosshair"></div>
+    <div id="message-area"></div>
 
-    <!-- UI СЛОЙ -->
     <div id="ui-layer">
-        
-        <!-- ГЛАВНОЕ МЕНЮ -->
-        <div id="main-menu" class="screen active">
-            <h1 class="glitch" data-text="ECHOES OF THE ABYSS">ECHOES OF THE ABYSS</h1>
-            <div class="menu-content">
-                <button id="btn-new-game" class="menu-btn">NEW GAME</button>
-                <button id="btn-continue" class="menu-btn" disabled>CONTINUE</button>
-                <button id="btn-settings" class="menu-btn">SETTINGS</button>
-                <button id="btn-exit" class="menu-btn">EXIT</button>
-            </div>
-            <div class="version">v1.0.0 | AAA WEB BUILD</div>
+        <!-- Main Menu -->
+        <div id="main-menu" class="screen interactive">
+            <h1>ECHOES OF THE ABYSS</h1>
+            <button class="btn" onclick="startGame()">New Game</button>
+            <button class="btn" onclick="loadGame()" id="continue-btn" disabled>Continue</button>
+            <button class="btn" onclick="toggleSettings()">Settings</button>
+            <div style="margin-top: 20px; font-size: 0.8rem; color: #666;">WASD: Move | SHIFT: Run | F: Flashlight | E: Interact</div>
         </div>
 
-        <!-- НАСТРОЙКИ -->
-        <div id="settings-menu" class="screen hidden">
-            <h2>SETTINGS</h2>
-            <div class="settings-group">
-                <label>Graphics Quality</label>
-                <select id="set-quality">
-                    <option value="low">LOW (Performance)</option>
-                    <option value="medium" selected>MEDIUM</option>
-                    <option value="high">HIGH (Ultra)</option>
-                </select>
-            </div>
-            <div class="settings-group">
-                <label>Mouse Sensitivity</label>
-                <input type="range" id="set-sensitivity" min="0.5" max="3.0" step="0.1" value="1.5">
-            </div>
-            <div class="settings-group">
-                <label>Master Volume</label>
-                <input type="range" id="set-volume" min="0" max="1" step="0.1" value="0.8">
-            </div>
-            <button id="btn-back-settings" class="menu-btn">BACK</button>
+        <!-- Settings -->
+        <div id="settings-modal" class="interactive">
+            <h2 style="font-family:'Creepster'; color:#fff;">SETTINGS</h2>
+            <div class="setting-row"><span>Sensitivity</span><input type="range" id="sens-slider" min="0.5" max="3.0" step="0.1" value="1.0"></div>
+            <div class="setting-row"><span>Volume</span><input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5"></div>
+            <button class="btn" style="font-size:1rem; padding:10px;" onclick="saveSettings(); toggleSettings()">Save</button>
         </div>
 
-        <!-- HUD (ИНТЕРФЕЙС В ИГРЕ) -->
+        <!-- Pause -->
+        <div id="pause-menu" class="screen interactive hidden">
+            <h2 style="font-family:'Creepster'; font-size:3rem; color:#fff;">PAUSED</h2>
+            <button class="btn" onclick="resumeGame()">Resume</button>
+            <button class="btn" onclick="saveAndQuit()">Save & Quit</button>
+        </div>
+
+        <!-- Game Over -->
+        <div id="game-over-screen" class="screen interactive hidden">
+            <h1 style="color:darkred;">YOU DIED</h1>
+            <p id="death-reason" style="font-size:1.2rem; margin-bottom:20px;">The Stalker caught you.</p>
+            <button class="btn" onclick="resetGame()">Try Again</button>
+            <button class="btn" onclick="showMainMenu()">Main Menu</button>
+        </div>
+
+        <!-- Victory -->
+        <div id="victory-screen" class="screen interactive hidden">
+            <h1 style="color:gold;">ESCAPED!</h1>
+            <p style="font-size:1.2rem; margin-bottom:20px;">You survived the nightmare.</p>
+            <button class="btn" onclick="resetGame()">Play Again</button>
+            <button class="btn" onclick="showMainMenu()">Main Menu</button>
+        </div>
+
+        <!-- HUD -->
         <div id="hud" class="hidden">
-            <div class="hud-top">
-                <div id="objective-text">FIND 5 KEY FRAGMENTS</div>
+            <div class="stat-box">
+                <div style="font-size:0.9rem; color:#aaa; text-transform:uppercase;">Health</div>
+                <div class="bar-container"><div id="health-fill"></div></div>
+                <div style="font-size:0.9rem; color:#aaa; text-transform:uppercase; margin-top:10px;">Stamina</div>
+                <div class="bar-container"><div id="stamina-fill"></div></div>
             </div>
-            <div class="hud-bottom">
-                <div class="stat-box">
-                    <span>HEALTH</span>
-                    <div class="bar-container"><div id="health-bar" class="bar health"></div></div>
-                </div>
-                <div class="stat-box">
-                    <span>STAMINA</span>
-                    <div class="bar-container"><div id="stamina-bar" class="bar stamina"></div></div>
-                </div>
-                <div class="stat-box right">
-                    <span>KEYS: <span id="keys-count">0</span>/5</span>
-                </div>
+            <div class="stat-box" style="text-align:right; border-left:none; border-right:4px solid gold;">
+                <div style="font-size:0.9rem; color:#aaa; text-transform:uppercase;">Keys</div>
+                <div style="font-size:1.5rem; font-weight:bold; color:gold;"><span id="keys-count">0</span>/5</div>
             </div>
-            <div id="crosshair">+</div>
-            <div id="interaction-prompt" class="hidden">PRESS [E]</div>
-        </div>
-
-        <!-- ПАУЗА -->
-        <div id="pause-menu" class="screen hidden">
-            <h2>PAUSED</h2>
-            <button id="btn-resume" class="menu-btn">RESUME</button>
-            <button id="btn-save-quit" class="menu-btn">SAVE & QUIT</button>
-        </div>
-
-        <!-- ЭКРАН СМЕРТИ -->
-        <div id="death-screen" class="screen hidden">
-            <h1 style="color: darkred;">YOU DIED</h1>
-            <p id="death-reason">Consumed by the darkness.</p>
-            <button id="btn-respawn" class="menu-btn">TRY AGAIN</button>
-            <button id="btn-death-menu" class="menu-btn">MAIN MENU</button>
-        </div>
-
-        <!-- ЭКРАН ПОБЕДЫ -->
-        <div id="victory-screen" class="screen hidden">
-            <h1 style="color: gold;">ESCAPED</h1>
-            <p>You survived the abyss.</p>
-            <p id="final-time">Time: 00:00</p>
-            <button id="btn-victory-menu" class="menu-btn">MAIN MENU</button>
         </div>
     </div>
 
-    <!-- СКРИПТЫ ИГРЫ (МОДУЛЬНАЯ СИСТЕМА) -->
+    <!-- Game Logic -->
     <script src="config.js"></script>
-    <script src="utils.js"></script>
-    <script src="audio.js"></script>
-    <script src="save.js"></script>
-    <script src="settings.js"></script>
-    <script src="ui.js"></script>
-    <script src="controls.js"></script>
-    <script src="player.js"></script>
-    <script src="enemy.js"></script>
-    <script src="levels/level1.js"></script>
-    <script src="main.js"></script>
+    <script src="enemy_system.js"></script>
+    <script src="game_core.js"></script>
 </body>
 </html>
